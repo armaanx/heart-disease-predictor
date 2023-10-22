@@ -91,7 +91,7 @@ const Test = () => {
     return (
         <div className='flex items-center justify-center lg:h-screen'>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3 p-11 pt-16 lg:grid lg:grid-flow-row lg:grid-cols-2 lg:justify-center lg:items-end lg:gap-6 '>
+                <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3 p-11 pt-24 lg:grid lg:grid-flow-row lg:grid-cols-2 lg:justify-center lg:items-end lg:gap-6 '>
                 <FormField
                         control={form.control}
                         name="age"
