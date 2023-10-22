@@ -1,11 +1,10 @@
 "use client"
-
+import axios from "axios";
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,6 +20,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { z } from "zod";
 import {zodResolver} from "@hookform/resolvers/zod"
+import { useMutation } from "@tanstack/react-query"
+import { useState } from "react";
+import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogTrigger, DialogDescription, DialogPortal } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { title } from "process";
+import { Loader2 } from "lucide-react";
 
 const FormSchema = z.object({
     age: z.string({
@@ -78,18 +83,56 @@ const defaultValues = {
     thalach: '',
     trestbps: ''
 }
+type ResultProps ={
+    prediction: number | null,
+    message: string
+}
+
 const Test = () => {
+    const { toast } = useToast();
+    const [result, setResult] = useState<ResultProps>({
+        prediction: null,
+        message: "",
+    });
+    const [open, setOpen] = useState(false);
+    const mutation = useMutation({
+        mutationFn: async (formData : z.infer<typeof FormSchema>) => {
+            const { data } = await axios.post('http://127.0.0.1:5000/predict', formData)
+            return data as ResultProps;
+        },
+        onError: (err) => {
+            toast({
+            title: err.name,
+            description: err.message,
+            variant: 'destructive'
+        })
+        },
+        onSuccess: (data) => {
+            setResult(data);
+            setOpen((prev)=> !prev);
+        },        
+    });
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues,
     });
     function onSubmit(data: z.infer<typeof FormSchema>) {
-        console.log(data);
-        form.reset();
+        mutation.mutate(data);
+        //form.reset();
     }
 
+ 
     return (
         <div className='flex items-center justify-center lg:h-screen'>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger></DialogTrigger>
+                <DialogContent >
+                    <DialogHeader>
+                        <DialogTitle><div className="font-normal text-md pb-3">Result</div></DialogTitle>
+                        <DialogDescription className="font-semibold text-lg">{result.message}</DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-3 p-11 pt-24 lg:grid lg:grid-flow-row lg:grid-cols-2 lg:justify-center lg:items-end lg:gap-6 '>
                 <FormField
@@ -335,7 +378,7 @@ const Test = () => {
                         />
 
 
-                    <Button type="submit">See Results</Button>
+                    <Button disabled={mutation.isPending} type="submit">{mutation.isPending ? <Loader2 className="w-3 h-3 animate-spin"/> : 'See Results'}</Button>
                 </form>
             </Form>
         </div>
