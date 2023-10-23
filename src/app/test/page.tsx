@@ -97,19 +97,20 @@ const Test = () => {
     const [open, setOpen] = useState(false);
     const mutation = useMutation({
         mutationFn: async (formData : z.infer<typeof FormSchema>) => {
-            const { data } = await axios.post('http://127.0.0.1:5000/predict', formData)
+            const { data } = await axios.post('https://hdp-65f737f8ebee.herokuapp.com/predict', formData)
             return data as ResultProps;
         },
         onError: (err) => {
             toast({
             title: err.name,
-            description: err.message,
+            description: `${err.message}. Please try again later.`,
             variant: 'destructive'
         })
         },
         onSuccess: (data) => {
             setResult(data);
-            setOpen((prev)=> !prev);
+            setOpen(true);
+            form.reset();
         },        
     });
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -118,7 +119,6 @@ const Test = () => {
     });
     function onSubmit(data: z.infer<typeof FormSchema>) {
         mutation.mutate(data);
-        //form.reset();
     }
 
  
